@@ -1,16 +1,4 @@
 #!/bin/python
-u"""Core module for SecureTea IDS.
-
-Project:
-    ╔═╗┌─┐┌─┐┬ ┬┬─┐┌─┐╔╦╗┌─┐┌─┐
-    ╚═╗├┤ │  │ │├┬┘├┤  ║ ├┤ ├─┤
-    ╚═╝└─┘└─┘└─┘┴└─└─┘ ╩ └─┘┴ ┴
-    Author: Abhishek Sharma <abhishek_official@hotmail.com> , May 15 2019
-    Version: 1.1
-    Module: SecureTea
-
-"""
-
 from servguard.lib.IDS.recon_attack import DetectRecon
 from servguard.lib.IDS.r2l_rules.r2l_engine import R2LEngine
 from servguard import logger
@@ -113,10 +101,10 @@ class SecureTeaIDS(object):
         """
         # Start sniffing the network packets
         scapy.sniff(prn=self.run, store=0)
-
 creds={"threshold":10,
        "eligibility_threshold":0.5,
         "severity_factor":0.9,
         "interface":'enp0s3'}
 obj=SecureTeaIDS(cred=creds,debug=True)
-obj.start_ids()
+if __name__=="__main__":
+    obj.start_ids()

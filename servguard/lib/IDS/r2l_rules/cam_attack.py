@@ -1,15 +1,5 @@
-# -*- coding: utf-8
-u"""CAM Attack detection module for SecureTea IDS.
 
-Project:
-    ╔═╗┌─┐┌─┐┬ ┬┬─┐┌─┐╔╦╗┌─┐┌─┐
-    ╚═╗├┤ │  │ │├┬┘├┤  ║ ├┤ ├─┤
-    ╚═╝└─┘└─┘└─┘┴└─└─┘ ╩ └─┘┴ ┴
-    Author: Abhishek Sharma <abhishek_official@hotmail.com> , May 19 2019
-    Version: 1.1
-    Module: SecureTea
 
-"""
 
 import scapy.all as scapy
 import time

@@ -1,15 +1,4 @@
-# -*- coding: utf-8
-u"""SYN Flood attack detection module for SecureTea IDS.
 
-Project:
-    ╔═╗┌─┐┌─┐┬ ┬┬─┐┌─┐╔╦╗┌─┐┌─┐
-    ╚═╗├┤ │  │ │├┬┘├┤  ║ ├┤ ├─┤
-    ╚═╝└─┘└─┘└─┘┴└─└─┘ ╩ └─┘┴ ┴
-    Author: Abhishek Sharma <abhishek_official@hotmail.com> , May 18 2019
-    Version: 1.1
-    Module: SecureTea
-
-"""
 
 import scapy.all as scapy
 import time

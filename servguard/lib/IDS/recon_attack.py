@@ -1,15 +1,3 @@
-# -*- coding: utf-8 -*-
-u"""Reconnaissance attack detection module for SecureTea IDS.
-
-Project:
-    ╔═╗┌─┐┌─┐┬ ┬┬─┐┌─┐╔╦╗┌─┐┌─┐
-    ╚═╗├┤ │  │ │├┬┘├┤  ║ ├┤ ├─┤
-    ╚═╝└─┘└─┘└─┘┴└─└─┘ ╩ └─┘┴ ┴
-    Author: Abhishek Sharma <abhishek_official@hotmail.com> , May 15 2019
-    Version: 1.1
-    Module: SecureTea
-
-"""
 
 import sys
 import scapy.all as scapy
