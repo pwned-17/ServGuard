@@ -39,7 +39,7 @@ class DetectRecon(object):
         """
 
         # Initialize logger
-        self.logger = logger.SecureTeaLogger(
+        self.logger = logger.ServGuardLogger(
                 __name__,
                 debug
         )
@@ -251,7 +251,7 @@ class DetectRecon(object):
                         try:
                             # Check if the IP exists in the dict ot not
                             count = self.icmp_scan[packet_ip]["count"]
-                            sellf.icmp_scan[packet_ip]["count"] = count + 1
+                            self.icmp_scan[packet_ip]["count"] = count + 1
                         except KeyError:
                             # Packet from a new IP address
                             self.icmp_scan[packet_ip] = {

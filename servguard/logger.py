@@ -3,7 +3,7 @@ import time
 import requests as req
 
 
-class SecureTeaLogger():
+class ServGuardLogger():
     """Initialize the logger for the script.
 
     Attributes:

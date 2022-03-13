@@ -22,7 +22,7 @@ class Deauth(object):
             None
         """
         # Initialize logger
-        self.logger = logger.SecureTeaLogger(
+        self.logger = logger.ServGuardLogger(
                 __name__,
                 debug=debug
         )
