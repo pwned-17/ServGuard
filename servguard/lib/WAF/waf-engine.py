@@ -55,11 +55,11 @@ class ServGuardWaf():
 
         await self.server.serve_forever()
 
-
+#helo
 creds={"listen_ip":"127.0.0.1",
        "listen_port":5555,
        "server_map":"'localhost:localhost:5000'",
        "debug":True,
        "mode":0}
-waf_obj=ServGuardWaf(creds)
-waf_obj.run_server()
+#waf_obj=ServGuardWaf(creds)
+#waf_obj.run_server()
