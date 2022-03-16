@@ -2,6 +2,8 @@
 import asyncio
 
 from servguard import logger
+from servguard.lib.WAF import analyzer
+from utils import *
 
 
 
@@ -16,6 +18,10 @@ class HTTP(asyncio.Protocol):
         self.debug=creds["debug"]
         self.server_map=creds["server_map"]
         self.mode=creds["mode"]
+
+        # analyzer class
+
+
 
         #Initialize Logger
 
@@ -32,8 +38,7 @@ class HTTP(asyncio.Protocol):
         """
         self.transport = transport
         self.rhost,self.rport=self.transport.get_extra_info("peername")
-        print(self.rhost)
-        print(self.rport)
+
 
     def data_received(self, data):
 
@@ -44,6 +49,51 @@ class HTTP(asyncio.Protocol):
 
         """
 
+        self.data=data
+
+        # Parse Data for further Analysis
+
+        self.parsed_data=RequestParser(self.data)
+        self.mlanalyzer = analyzer.MlAnalyzer(self.parsed_data.path)
+
+        # GET REQUEST
+
+        if self.parsed_data.command=="GET":
+            self.mlanalyzer.loadmodel()
+            self.value=self.mlanalyzer.predictor()
+
+            if self.value[0]=="cmdi":
+                self.logger.log(
+                    "Command Injection Detected from {}:{}".format(self.rhost,self.rport),
+                    logtype="warning"
+                )
+            if self.value[0]=="valid":
+                self.logger.log(
+                    "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,self.parsed_data.path),
+                    logtype="info"
+                )
+
+
+
+
+
+        # POST REQUEST
+
+        elif self.parsed_data.command=="POST":
+            pass
+
+
+        # CONNECT REQUEST
+
+        elif self.parsed_data.command=="CONNECT":
+            pass
+
+
+
+        # OTHER REQUESTS
+
+        else:
+            pass
 
 
 
