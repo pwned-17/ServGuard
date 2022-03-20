@@ -1,2 +1,2 @@
-from .IDS import secureTeaIDS
+from .IDS import ids_engine
 

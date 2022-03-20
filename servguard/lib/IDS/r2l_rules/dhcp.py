@@ -32,7 +32,7 @@ class DHCP(object):
         self.count = 0
 
         # Set threshold to 10 Request / per second
-        self._THRESHOLD = 10  # inter = 0.1
+        self._THRESHOLD = 1  # inter = 0.1
 
     def detect_dhcp(self, pkt):
         """
