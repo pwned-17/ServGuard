@@ -1,6 +1,6 @@
 #!/bin/python
 from servguard.lib.IDS.recon_attack import DetectRecon
-from servguard.lib.IDS.r2l_rules.r2l_engine import R2LEngine
+from servguard.lib.IDS.r2l_rules.rule_engine import R2LEngine
 from servguard import logger
 import scapy.all as scapy
 from servguard.lib.IDS.utils import *
@@ -105,9 +105,6 @@ creds={"threshold":10,
        "eligibility_threshold":0.5,
         "severity_factor":0.9,
         "interface":'enp0s3'}
-#obj=ServGuardIds(cred=creds,debug=True)
+obj=ServGuardIds(cred=creds,debug=True)
 if __name__=="__main__":
-    pass
-
-
-    #obj.start_ids()
+    obj.start_ids()
