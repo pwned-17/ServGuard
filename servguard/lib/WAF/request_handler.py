@@ -1,5 +1,6 @@
 
 import asyncio
+from urllib import  parse
 
 from servguard import logger
 from servguard.lib.WAF import analyzer
@@ -55,7 +56,8 @@ class HTTP(asyncio.Protocol):
         # Parse Data for further Analysis
 
         self.parsed_data=RequestParser(self.data)
-        self.mlanalyzer = analyzer.MlAnalyzer(self.parsed_data.path)
+        self.path= parse.unquote(self.parsed_data.path)
+        self.mlanalyzer = analyzer.MlAnalyzer(self.path)
 
         # GET REQUEST
 
@@ -64,6 +66,7 @@ class HTTP(asyncio.Protocol):
             self.value=self.mlanalyzer.predictor()
 
             if self.value[0]!="valid":
+                self.transport.close()
                 self.logger.log(
                     "{} Detected from {}:{}".format(self.value[0],self.rhost,self.rport),
                     logtype="warning"
@@ -77,7 +80,7 @@ class HTTP(asyncio.Protocol):
 
 
                     self.logger.log(
-                        "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,self.parsed_data.path),
+                        "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,self.path),
                         logtype="info"
                     )
                 except Exception as E:

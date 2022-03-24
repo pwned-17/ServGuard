@@ -36,6 +36,9 @@ class ServGuardWaf():
 
         except Exception as e:
             print(e)
+        finally:
+            self.server.close()
+            self.loop.close()
 
     async def start(self):
 

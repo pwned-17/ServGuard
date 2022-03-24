@@ -1,15 +1,6 @@
 from servguard.lib.IDS.r2l_rules.arp_spoof import ARPCache
-from servguard.lib.IDS.r2l_rules.cam_attack import CAM
 from servguard.lib.IDS.r2l_rules.ddos import DDoS
-from servguard.lib.IDS.r2l_rules.dhcp import DHCP
 from servguard.lib.IDS.r2l_rules.ping_of_death import PingOfDeath
-from servguard.lib.IDS.r2l_rules.syn_flood import SynFlood
-from servguard.lib.IDS.r2l_rules.land_attack import LandAttack
-from servguard.lib.IDS.r2l_rules.wireless.deauth import Deauth
-from servguard.lib.IDS.r2l_rules.wireless.fake_access import FakeAccessPoint
-from servguard.lib.IDS.r2l_rules.wireless.hidden_node import HiddenNode
-from servguard.lib.IDS.r2l_rules.wireless.ssid_spoof import SSIDSpoof
-
 
 class R2LEngine(object):
     """R2LEngine class."""
@@ -30,17 +21,9 @@ class R2LEngine(object):
         """
         # Create objects of all the imported class
         self.arp_spoof = ARPCache(debug=debug)
-        self.cam_attack = CAM(debug=debug)
-        self.dhcp = DHCP(debug=debug)
         self.ping_of_death = PingOfDeath(debug=debug)
-        self.land_attack = LandAttack(debug=debug)
         self.ddos = DDoS(debug=debug)
-        self.syn_flood = SynFlood(debug=debug)
-        # Wireless
-        self.deauth = Deauth(debug=debug)
-        self.fake_access = FakeAccessPoint(debug=debug)
-        self.hidden_node = HiddenNode(debug=debug)
-        self.ssid_spoof = SSIDSpoof(debug=debug, interface=interface)
+
 
     def run(self, pkt):
         """
@@ -58,14 +41,5 @@ class R2LEngine(object):
         """
         # Pass the packets
         self.arp_spoof.proces_packet(pkt)
-        self.cam_attack.detect_cam(pkt)
-        self.dhcp.detect_dhcp(pkt)
-        self.land_attack.detect_land_attack(pkt)
         self.ping_of_death.detect(pkt)
         self.ddos.classify_ddos(pkt)
-        self.syn_flood.detect_syn_flood(pkt)
-        # Wireless
-        self.deauth.detect_deauth(pkt)
-        self.fake_access.detect_fake_ap(pkt)
-        self.hidden_node.detect_hidden_node(pkt)
-        self.ssid_spoof.start_process()
