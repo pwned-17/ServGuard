@@ -1,17 +1,17 @@
 #!/bin/python
 from servguard.lib.IDS.recon_attack import DetectRecon
-from servguard.lib.IDS.r2l_rules.rule_engine import R2LEngine
+from servguard.lib.IDS.r2l_rules.r2l_engine import R2LEngine
 from servguard import logger
 import scapy.all as scapy
 from servguard.lib.IDS.utils import *
 import sys
 
 
-class ServGuardIds(object):
-    """ServGuardIDS Class."""
+class SecureTeaIDS(object):
+    """SecureTeaIDS Class."""
 
     def __init__(self, cred=None, debug=None):
-        """Initialize ServGuardIDS.
+        """Initialize SecureTeaIDS.
 
         Args:
             cred (dict): Credentials for IDS
@@ -105,6 +105,7 @@ creds={"threshold":10,
        "eligibility_threshold":0.5,
         "severity_factor":0.9,
         "interface":'enp0s3'}
-obj=ServGuardIds(cred=creds,debug=True)
+#obj=SecureTeaIDS(cred=creds,debug=True)
 if __name__=="__main__":
-    obj.start_ids()
+    pass
+    #obj.start_ids()

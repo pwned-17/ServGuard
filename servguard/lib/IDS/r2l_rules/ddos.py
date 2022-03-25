@@ -195,7 +195,7 @@ class DDoS(object):
 
     def detect_mimp(self):
         """
-        Detect SIMP (Single IP Multiple Port) DDoS attack.
+        Detect MIMP (Multiple IP Multiple Port) DDoS attack.
 
         Args:
             None

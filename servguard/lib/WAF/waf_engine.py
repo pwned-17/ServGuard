@@ -64,5 +64,5 @@ creds={"listen_ip":"127.0.0.1",
        "server_map":{"localhost":"localhost:5000","127.0.0.1:5555":"127.0.0.1:2000"},
        "debug":True,
        "mode":0}
-#waf_obj=ServGuardWaf(creds)
-#waf_obj.run_server()
+waf_obj=ServGuardWaf(creds)
+waf_obj.run_server()
