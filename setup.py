@@ -5,7 +5,7 @@ setup(
     name='ServGuard',
     version='',
     packages=['servguard', 'servguard.lib', 'servguard.lib.IDS', 'servguard.lib.IDS.r2l_rules',
-              'servguard.lib.IDS.r2l_rules.wireless', 'servguard.lib.WAF'],
+               'servguard.lib.WAF'],
     url='',
     data_files=config_location,
     license='',

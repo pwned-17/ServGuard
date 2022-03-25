@@ -105,6 +105,7 @@ creds={"threshold":10,
        "eligibility_threshold":0.5,
         "severity_factor":0.9,
         "interface":'enp0s3'}
-obj=SecureTeaIDS(cred=creds,debug=True)
+#obj=SecureTeaIDS(cred=creds,debug=True)
 if __name__=="__main__":
-    obj.start_ids()
+    pass
+    #obj.start_ids()

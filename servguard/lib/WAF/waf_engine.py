@@ -36,6 +36,9 @@ class ServGuardWaf():
 
         except Exception as e:
             print(e)
+        finally:
+            self.server.close()
+            self.loop.close()
 
     async def start(self):
 
@@ -55,10 +58,10 @@ class ServGuardWaf():
 
         await self.server.serve_forever()
 
-
+#helo
 creds={"listen_ip":"127.0.0.1",
        "listen_port":5555,
-       "server_map":"'localhost:localhost:5000'",
+       "server_map":{"localhost":"localhost:5000","127.0.0.1:5555":"127.0.0.1:2000"},
        "debug":True,
        "mode":0}
 #waf_obj=ServGuardWaf(creds)

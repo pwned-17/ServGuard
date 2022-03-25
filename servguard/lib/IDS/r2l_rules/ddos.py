@@ -35,7 +35,7 @@ class DDoS(object):
         self.mimp = OrderedDict()
 
         # Initialize threshold to 10000 packets / per second
-        self._THRESHOLD = 10000  # inter = 0.0001
+        self._THRESHOLD = 100  # inter = 0.0001
 
     def classify_ddos(self, pkt):
         """

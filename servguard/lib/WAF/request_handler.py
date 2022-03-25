@@ -1,8 +1,10 @@
 
 import asyncio
+from urllib import  parse
 
 from servguard import logger
 from servguard.lib.WAF import analyzer
+from servguard.lib.WAF import forwarder
 from utils import *
 
 
@@ -54,7 +56,8 @@ class HTTP(asyncio.Protocol):
         # Parse Data for further Analysis
 
         self.parsed_data=RequestParser(self.data)
-        self.mlanalyzer = analyzer.MlAnalyzer(self.parsed_data.path)
+        self.path= parse.unquote(self.parsed_data.path)
+        self.mlanalyzer = analyzer.MlAnalyzer(self.path)
 
         # GET REQUEST
 
@@ -62,16 +65,29 @@ class HTTP(asyncio.Protocol):
             self.mlanalyzer.loadmodel()
             self.value=self.mlanalyzer.predictor()
 
-            if self.value[0]=="cmdi":
+            if self.value[0]!="valid":
+                self.transport.close()
                 self.logger.log(
-                    "Command Injection Detected from {}:{}".format(self.rhost,self.rport),
+                    "{} Detected from {}:{}".format(self.value[0],self.rhost,self.rport),
                     logtype="warning"
                 )
-            if self.value[0]=="valid":
-                self.logger.log(
-                    "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,self.parsed_data.path),
-                    logtype="info"
-                )
+            else :
+
+                #Forward the Request and write response
+
+                try:
+                    self.send_request()
+
+
+                    self.logger.log(
+                        "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,self.path),
+                        logtype="info"
+                    )
+                except Exception as E:
+                    self.logger.log(
+                        E,
+                        logtype="error"
+                    )
 
 
 
@@ -94,17 +110,30 @@ class HTTP(asyncio.Protocol):
 
         else:
             pass
+    def send_request(self):
+
+        """
+        Responsible for sending the incoming request on validation,
+        to the backend server
+        """
+        self.forwarder=forwarder.Forwarder(self.transport)
+        host=self.parsed_data.headers["HOST"]
 
 
+        # send Data and receive response
+        try:
+            self.forwarder.connect(host,self.server_map)
+            self.forwarder.send_data(self.data)
+            resp=self.forwarder.receive_data()
 
-
-
-
-
-
-
-
-
+            self.transport.write(resp)
+            self.forwarder.close()
+            self.close_transport()
+        except Exception as E:
+            self.logger.log(
+                E,
+                logtype="error"
+            )
 
 
 
