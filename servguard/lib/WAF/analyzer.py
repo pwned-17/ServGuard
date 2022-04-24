@@ -10,6 +10,7 @@ import warnings
 import os
 
 
+from urllib import  parse
 from servguard import logger
 from joblib import load
 from pathlib import  Path
@@ -25,8 +26,7 @@ class MlAnalyzer():
 
 
         warnings.filterwarnings("ignore", category=UserWarning)
-        self.path=path
-
+        self.path=parse.unquote(path)
         self.MODEL_PATH= Path(os.path.dirname(__file__)).parent /"/Models/rf-model1"
 
 
@@ -38,7 +38,7 @@ class MlAnalyzer():
     def loadmodel(self):
 
         try:
-            self.model=load("./Models/svm-model1")
+            self.model=load("/home/ajmal/Desktop/ServGuard/servguard/lib/WAF/Models/svm-model1")
         except Exception as e:
             self.logger.log(
                 e,

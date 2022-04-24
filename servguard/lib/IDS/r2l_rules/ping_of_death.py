@@ -26,7 +26,7 @@ class PingOfDeath(object):
         )
 
         # Initialize threshold
-        self._THRESHOLD = 600
+        self._THRESHOLD = 60
 
 
 

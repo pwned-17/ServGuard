@@ -1,10 +1,14 @@
 
 import asyncio
 
+from urllib import parse
 from servguard import logger
 from servguard.lib.WAF import analyzer
 from servguard.lib.WAF import forwarder
-from utils import *
+from servguard.lib.WAF import header_analyzer
+from servguard import alerter
+from servguard.lib.WAF.utils import *
+from pymemcache.client import base
 
 
 
@@ -19,15 +23,21 @@ class HTTP(asyncio.Protocol):
         self.debug=creds["debug"]
         self.server_map=creds["server_map"]
         self.mode=creds["mode"]
+        self.secure_headers=creds["secure_headers"]
+        self.threshold=10
 
-        # analyzer class
 
-
-
-        #Initialize Logger
+         #Initialize Logger
 
         self.logger=logger.ServGuardLogger(__name__,
                                            debug=self.debug)
+        # Memcached Instance
+
+        self.client = base.Client(("localhost", 11211))
+
+
+        #initialize alerter
+        self.alerter=alerter.Alert(debug=self.debug)
 
 
 
@@ -52,10 +62,16 @@ class HTTP(asyncio.Protocol):
 
         self.data=data
 
+
         # Parse Data for further Analysis
 
         self.parsed_data=RequestParser(self.data)
         self.mlanalyzer = analyzer.MlAnalyzer(self.parsed_data.path)
+
+        # Header Analyzer
+        if self.secure_headers !=0:
+            self.header_analyzer=header_analyzer.HeaderAnalyzer(headers=self.parsed_data.headers)
+            self.header_analyzer.find_insecure_headers()
 
         # GET REQUEST
 
@@ -64,10 +80,35 @@ class HTTP(asyncio.Protocol):
             self.value=self.mlanalyzer.predictor()
 
             if self.value[0]!="valid":
-                self.logger.log(
-                    "{} Detected from {}:{}".format(self.value[0],self.rhost,self.rport),
-                    logtype="warning"
-                )
+                if self.client.get(self.rhost)!=None:
+
+                    count=self.client.get(self.rhost).decode("utf-8")
+
+                    if int(count)>=self.threshold:
+
+                        self.logger.log(
+                            "{} Detected from {}:{}".format(self.value[0], self.rhost, self.rport),
+                            logtype="warning"
+                        )
+                        #Close Transport with a warning
+
+                        self.transport.write(b"HTTP/1.0 403\r\n \r\n\r\n <!DOCTYPE HTML>\r\n<HTML>\r\n<BODY>\r\n<h1 align='center'>Requested Blocked By server </h1></BODY></HTML>")
+                        self.transport.close()
+
+                        #Noify Slack
+
+                        msg={"Origin":"WAF",
+                             "IP":self.rhost,
+                             "Incident":self.value[0]
+                             }
+                        self.create_alert(msg)
+
+                    else :
+                        self.client.incr(self.rhost,1)
+                        self.send_request()
+
+                else:
+                    self.client.add(self.rhost,0)
             else :
 
                 #Forward the Request and write response
@@ -77,7 +118,7 @@ class HTTP(asyncio.Protocol):
 
 
                     self.logger.log(
-                        "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,self.parsed_data.path),
+                        "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,parse.unquote(self.parsed_data.path)),
                         logtype="info"
                     )
                 except Exception as E:
@@ -131,8 +172,13 @@ class HTTP(asyncio.Protocol):
                 E,
                 logtype="error"
             )
-
-
+    def create_alert(self,msg):
+       try:
+           self.alerter.run(msg)
+       except Exception as E:
+           self.logger.log(
+               E,logtype="error"
+           )
 
     def close_transport(self):
 

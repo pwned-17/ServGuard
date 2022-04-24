@@ -35,7 +35,7 @@ class Configuration():
 
 
         if os.path.exists(self.path):
-            with open(self.path) as f:
+            with open(self.path,'r') as f:
                 self.creds=json.load(f)
 
         else:
@@ -44,5 +44,4 @@ class Configuration():
                 logtype="error"
             )
         return self.creds
-
 

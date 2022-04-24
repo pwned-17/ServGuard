@@ -82,7 +82,7 @@ class DetectRecon(object):
                 sys.exit(0)
 
         # Set count threshold
-        self._COUNT = self._THRESHOLD * 1000
+        self._COUNT = self._THRESHOLD * 10
 
         # Initialize empty dicts to store IPs
         self.tcp_ack = dict()

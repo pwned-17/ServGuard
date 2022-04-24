@@ -1,6 +1,6 @@
 #!/bin/python
 from servguard.lib.IDS.recon_attack import DetectRecon
-from servguard.lib.IDS.r2l_rules.r2l_engine import R2LEngine
+from servguard.lib.IDS.r2l_rules.rule_engine import R2LEngine
 from servguard import logger
 import scapy.all as scapy
 from servguard.lib.IDS.utils import *
@@ -52,10 +52,7 @@ class ServGuardIds(object):
 
             # Create R2LEngine object
             self.r2l_rules = R2LEngine(debug=debug, interface=self.cred["interface"])
-            self.logger.log(
-                "SecureTea Intrusion Detection started",
-                logtype="info"
-            )
+
         else:
             self.logger.log(
                 "Run as root",
@@ -88,7 +85,7 @@ class ServGuardIds(object):
 
     def start_ids(self):
         """
-        Start SecureTea IDS.
+        Start ServGuard IDS.
 
         Args:
             None
@@ -101,11 +98,11 @@ class ServGuardIds(object):
         """
         # Start sniffing the network packets
         scapy.sniff(prn=self.run, store=0)
-creds={"threshold":10,
-       "eligibility_threshold":0.5,
-        "severity_factor":0.9,
-        "interface":'enp0s3'}
+#creds={"threshold":10,
+      # "eligibility_threshold":0.9,
+       # "severity_factor":0.9,
+        #"interface":'enp0s3'}
 #obj=ServGuardIds(cred=creds,debug=True)
 if __name__=="__main__":
-    pass
+     pass
     #obj.start_ids()
