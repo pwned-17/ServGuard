@@ -4,6 +4,8 @@ import scapy.all as scapy
 import time
 from collections import defaultdict
 from servguard import logger
+from pymemcache.client import base
+from servguard import alerter
 
 
 from servguard.lib.IDS import utils
@@ -94,6 +96,17 @@ class DetectRecon(object):
         self.os_scan = dict()
         self.eligibility_trace = defaultdict(lambda: 1)
 
+       # memcached for state store
+        self.client = base.Client(("localhost", 11211))
+       # sack for Alerting
+        self.alerter = alerter.Alert(debug=True)
+       # Initial Flags for Alerts
+        self.client.set("tcp",False)
+        self.client.set("udp", False)
+        self.client.set("fin", False)
+        self.client.set("xmas", False)
+        self.client.set("null", False)
+        self.client.set("os", False)
 
 
 
@@ -124,13 +137,7 @@ class DetectRecon(object):
                             logtype="error"
                         )
                     if packet_ip:
-                        self.eligibility_trace[packet_ip] = (1 - self._SEVERITY_FACTOR) * self.eligibility_trace[packet_ip] + self._SEVERITY_FACTOR
-                        if self.eligibility_trace[packet_ip] <= self._ELIGIBILITY_THRESHOLD:
-                            utils.excecute_command("iptables -A INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
-                        else:
-                            utils.excecute_command("iptables -D INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
+
                         try:
                             # Check if the IP exists in the dict or not
                             count = self.tcp_ack[packet_ip]["count"]
@@ -153,7 +160,7 @@ class DetectRecon(object):
                             )
             # Check if there has been an intrusion attack
             self.calc_intrusion(scan_dict=self.tcp_ack,
-                                msg="TCP ACK / Window Scan detected")
+                                msg="TCP ACK / Window Scan detected",attack_type="tcp")
 
     def detect_udp(self, packet=None):
         """
@@ -180,13 +187,7 @@ class DetectRecon(object):
                         logtype="error"
                     )
                 if packet_ip:
-                    self.eligibility_trace[packet_ip] = (1 - self._SEVERITY_FACTOR) * self.eligibility_trace[packet_ip] + self._SEVERITY_FACTOR
-                    if self.eligibility_trace[packet_ip] <= self._ELIGIBILITY_THRESHOLD:
-                        utils.excecute_command("iptables -A INPUT -s " + packet_ip + " -j DROP")
-                        utils.excecute_command("iptables-save")
-                    else:
-                        utils.excecute_command("iptables -D INPUT -s " + packet_ip + " -j DROP")
-                        utils.excecute_command("iptables-save")
+
                     try:
                         # Check if the IP exists in the dict or not
                         count = self.udp_scan[packet_ip]["count"]
@@ -209,7 +210,7 @@ class DetectRecon(object):
                         )
         # Check if there has been an intrusion attack
         self.calc_intrusion(scan_dict=self.udp_scan,
-                            msg="UDP Scan detected")
+                            msg="UDP Scan detected",attack_type="udp")
 
     def detect_icmp(self, packet=None):
         """
@@ -241,13 +242,7 @@ class DetectRecon(object):
                             logtype="error"
                         )
                     if packet_ip:
-                        self.eligibility_trace[packet_ip] = (1 - self._SEVERITY_FACTOR) * self.eligibility_trace[packet_ip] + self._SEVERITY_FACTOR
-                        if self.eligibility_trace[packet_ip] <= self._ELIGIBILITY_THRESHOLD:
-                            utils.excecute_command("iptables -A INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
-                        else:
-                            utils.excecute_command("iptables -D INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
+
                         try:
                             # Check if the IP exists in the dict ot not
                             count = self.icmp_scan[packet_ip]["count"]
@@ -309,13 +304,7 @@ class DetectRecon(object):
                             logtype="error"
                         )
                     if packet_ip:
-                        self.eligibility_trace[packet_ip] = (1 - self._SEVERITY_FACTOR) * self.eligibility_trace[packet_ip] + self._SEVERITY_FACTOR
-                        if self.eligibility_trace[packet_ip] <= self._ELIGIBILITY_THRESHOLD:
-                            utils.excecute_command("iptables -A INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
-                        else:
-                            utils.excecute_command("iptables -D INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
+
                         try:
                             # Check if the IP exists in the dict or not
                             count = self.os_scan[packet_ip]["count"]
@@ -338,7 +327,7 @@ class DetectRecon(object):
                             )
             # Check if there has been an intrusion attack
             self.calc_intrusion(scan_dict=self.os_scan,
-                                msg="OS Fingerprinting Scan detected")
+                                msg="OS Fingerprinting Scan detected",attack_type="os")
 
     def detect_fin_scan(self, packet):
         """
@@ -367,13 +356,7 @@ class DetectRecon(object):
                             logtype="error"
                         )
                     if packet_ip:
-                        self.eligibility_trace[packet_ip] = (1 - self._SEVERITY_FACTOR) * self.eligibility_trace[packet_ip] + self._SEVERITY_FACTOR
-                        if self.eligibility_trace[packet_ip] <= self._ELIGIBILITY_THRESHOLD:
-                            utils.excecute_command("iptables -A INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
-                        else:
-                            utils.excecute_command("iptables -D INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
+
                         try:
                             # Check if the IP exists in the dict or not
                             count = self.fin_scan[packet_ip]["count"]
@@ -396,7 +379,7 @@ class DetectRecon(object):
                             )
             # Check if there has been an intrusion attack
             self.calc_intrusion(scan_dict=self.fin_scan,
-                                msg="FIN Scan detected")
+                                msg="FIN Scan detected",attack_type="fin")
 
     def detect_xmas_scan(self, packet=None):
         """
@@ -425,13 +408,7 @@ class DetectRecon(object):
                             logtype="error"
                         )
                     if packet_ip:
-                        self.eligibility_trace[packet_ip] = (1 - self._SEVERITY_FACTOR) * self.eligibility_trace[packet_ip] + self._SEVERITY_FACTOR
-                        if self.eligibility_trace[packet_ip] <= self._ELIGIBILITY_THRESHOLD:
-                            utils.excecute_command("iptables -A INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
-                        else:
-                            utils.excecute_command("iptables -D INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
+
                         try:
                             # Check if the IP exists in the dict or not
                             count = self.xmas_scan[packet_ip]["count"]
@@ -454,7 +431,7 @@ class DetectRecon(object):
                             )
             # Check if there has been an intrusion attack
             self.calc_intrusion(scan_dict=self.xmas_scan,
-                                msg="XMAS Scan detected")
+                                msg="XMAS Scan detected",attack_type="xmas")
 
     def detect_null_scan(self, packet):
         """
@@ -483,13 +460,7 @@ class DetectRecon(object):
                             logtype="error"
                         )
                     if packet_ip:
-                        self.eligibility_trace[packet_ip] = (1 - self._SEVERITY_FACTOR) * self.eligibility_trace[packet_ip] + self._SEVERITY_FACTOR
-                        if self.eligibility_trace[packet_ip] <= self._ELIGIBILITY_THRESHOLD:
-                            utils.excecute_command("iptables -A INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
-                        else:
-                            utils.excecute_command("iptables -D INPUT -s " + packet_ip + " -j DROP")
-                            utils.excecute_command("iptables-save")
+
                         try:
                             # Check if the IP exists in the dict or not
                             count = self.null_scan[packet_ip]["count"]
@@ -512,9 +483,9 @@ class DetectRecon(object):
                             )
             # Check if there has been an intrusion attack
             self.calc_intrusion(scan_dict=self.null_scan,
-                                msg="NULL Scan detected")
+                                msg="NULL Scan detected",attack_type="null")
 
-    def calc_intrusion(self, scan_dict, msg):
+    def calc_intrusion(self, scan_dict, msg,attack_type):
         """
         Detect intrusion by comparing observed and expected
         threshold ratio.
@@ -529,6 +500,7 @@ class DetectRecon(object):
         Returns:
             None
         """
+        alert_flag=self.client.get(attack_type).decode("utf-8")
         for key in scan_dict.keys():
             current_time = time.time()
             start_time = scan_dict[key]["start_time"]
@@ -541,8 +513,27 @@ class DetectRecon(object):
             except ZeroDivisionError:
                 calc_threshold = int(port_len)
 
-            if (calc_threshold >= self._THRESHOLD or
-                count >= self._COUNT):
+            if ((calc_threshold >= self._THRESHOLD or
+                count >= self._COUNT) and alert_flag=="True" ):
+
+                # Intrusion detected
+                new_msg = msg + " from IP: " + str(key)
+                self.logger.log(
+                    new_msg,
+                    logtype="warning"
+                )
+            if ((calc_threshold >= self._THRESHOLD or
+                    count >= self._COUNT) and alert_flag=="False"):
+                print("inside slack")
+                self.client.set(attack_type,True)
+                # Send slack Message
+                alert_msg={"Origin": "IDS",
+                     "IP": str(key),
+                     "Incident": msg
+                     }
+
+                self.alerter.run(alert_msg)
+                print("completed")
                 # Intrusion detected
                 new_msg = msg + " from IP: " + str(key)
                 self.logger.log(

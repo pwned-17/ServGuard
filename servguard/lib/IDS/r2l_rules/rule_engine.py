@@ -1,6 +1,10 @@
 from servguard.lib.IDS.r2l_rules.arp_spoof import ARPCache
+
 from servguard.lib.IDS.r2l_rules.ddos import DDoS
+
 from servguard.lib.IDS.r2l_rules.ping_of_death import PingOfDeath
+
+
 
 class R2LEngine(object):
     """R2LEngine class."""
@@ -21,7 +25,9 @@ class R2LEngine(object):
         """
         # Create objects of all the imported class
         self.arp_spoof = ARPCache(debug=debug)
+
         self.ping_of_death = PingOfDeath(debug=debug)
+
         self.ddos = DDoS(debug=debug)
 
 
@@ -41,5 +47,6 @@ class R2LEngine(object):
         """
         # Pass the packets
         self.arp_spoof.proces_packet(pkt)
+
         self.ping_of_death.detect(pkt)
         self.ddos.classify_ddos(pkt)
