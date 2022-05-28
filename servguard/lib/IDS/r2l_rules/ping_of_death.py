@@ -1,6 +1,9 @@
 
 import scapy.all as scapy
 from servguard import logger
+from servguard import log2sys
+from pymemcache.client import base
+from servguard import alerter
 
 
 class PingOfDeath(object):
@@ -24,6 +27,14 @@ class PingOfDeath(object):
                 __name__,
                 debug=debug
         )
+        # Initilaize Logging to System
+        self.log2sys = log2sys.WafLogger(__name__, debug=debug)
+        # memcached for state store
+        self.client = base.Client(("localhost", 11211))
+        # sack for Alerting
+        self.alerter = alerter.Alert(debug=True)
+        # Initial Flags for Alerts
+        self.client.set("pod", False)
 
         # Initialize threshold
         self._THRESHOLD = 60
@@ -51,7 +62,7 @@ class PingOfDeath(object):
 
                 load_len = len(pkt[scapy.Raw].load)
 
-                if (load_len >= self._THRESHOLD):
+                if ((load_len >= self._THRESHOLD) and self.client.get("pod").decode("utf-8")=="True"):
                     source_ip = pkt[scapy.IP].src
                     msg = "Possible ping of death attack detected " \
                           "from: {}".format(source_ip)
@@ -59,4 +70,22 @@ class PingOfDeath(object):
                         msg,
                         logtype="warning"
                     )
+                    self.log2sys.write_log(msg)
+                if ((load_len >= self._THRESHOLD) and self.client.get("pod").decode("utf-8")=="False"):
+                    source_ip = pkt[scapy.IP].src
+                    self.client.set("pod", True)
+
+                    alert_msg = {"Origin": "IDS",
+                                 "IP": source_ip,
+                                 "Incident": "Possible ping of death attack detected"
+                                 }
+
+                    self.alerter.run(alert_msg)
+                    msg = "Possible ping of death attack detected " \
+                          "from: {}".format(source_ip)
+                    self.logger.log(
+                        msg,
+                        logtype="warning"
+                    )
+                    self.log2sys.write_log(msg)
 

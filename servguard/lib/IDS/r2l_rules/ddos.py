@@ -4,7 +4,9 @@ import scapy.all as scapy
 import time
 from collections import OrderedDict
 from servguard import logger
-
+from servguard import alerter
+from pymemcache.client import base
+from servguard import log2sys
 
 class DDoS(object):
     """Detect DDoS attacks."""
@@ -27,6 +29,18 @@ class DDoS(object):
                 __name__,
                 debug=debug
         )
+        # Initialize System Logger
+        self.log2sys=log2sys.WafLogger(__name__,debug=debug)
+        # memcached for state store
+        self.client = base.Client(("localhost", 11211))
+        # sack for Alerting
+        self.alerter = alerter.Alert(debug=True)
+        # Initial Flags for Alerts
+        self.client.set("sisp", False)
+        self.client.set("simp", False)
+        self.client.set("misp", False)
+        self.client.set("mimp", False)
+
 
         # Initialize empty dicts
         self.sisp = OrderedDict()
@@ -114,12 +128,27 @@ class DDoS(object):
             except ZeroDivisionError:
                 calc_portlen_threshold = int(len_port)
 
-            if (calc_count_threshold > self._THRESHOLD or
-                calc_portlen_threshold > self._THRESHOLD):
+            if ((calc_count_threshold > self._THRESHOLD or
+                calc_portlen_threshold > self._THRESHOLD) and self.client.get("simp").decode("utf-8")=="True"):
                 self.logger.log(
                     "Possible Single IP Multiple Port DDoS attack",
                     logtype="warning"
                 )
+            if ((calc_count_threshold > self._THRESHOLD or
+                 calc_portlen_threshold > self._THRESHOLD) and self.client.get("simp").decode("utf-8") =="False"):
+                self.client.set("simp", True)
+
+                alert_msg = {"Origin": "IDS",
+                             "IP": ip,
+                             "Incident": "Possible Single IP Multiple Port DDoS attack."
+                             }
+
+                self.alerter.run(alert_msg)
+                self.logger.log(
+                    "Possible Single IP Multiple Port DDoS attack",
+                    logtype="warning"
+                )
+                self.log2sys.write_log("Possible Single IP Multiple Port DDoS attack")
 
     def detect_sisp(self):
         """
@@ -145,11 +174,24 @@ class DDoS(object):
             except ZeroDivisionError:
                 calc_threshold = int(count)
 
-            if (calc_threshold > self._THRESHOLD):
+            if ((calc_threshold > self._THRESHOLD) and self.client.get("sisp").decode("utf-8") == "True"):
                 self.logger.log(
-                    "Possible Single IP Single Port DDoS attack",
+                    "Possible Single IP Single Port DDoS attack detected",
                     logtype="warning"
                 )
+            if ((calc_threshold > self._THRESHOLD) and self.client.get("sisp").decode("utf-8") == "False"):
+                self.client.set("sisp", True)
+                alert_msg = {"Origin": "IDS",
+                             "IP": ip,
+                             "Incident": "Possible Single IP Single Port DDoS attack."
+                             }
+
+                self.alerter.run(alert_msg)
+                self.logger.log(
+                    "Possible Multiple IP Single Port DDoS attack detected",
+                    logtype="warning"
+                )
+                self.log2sys.write_log("Possible Multiple IP Multiple Port DDoS attack")
 
     def detect_misp(self):
         """
@@ -187,11 +229,25 @@ class DDoS(object):
             except ZeroDivisionError:
                 calc_threshold = int(count)
 
-            if calc_threshold > self._THRESHOLD:
+            if ((calc_threshold > self._THRESHOLD) and self.client.get("misp").decode("utf-8")=="True"):
                 self.logger.log(
                     "Possible Multiple IP Single Port DDoS attack detected",
                     logtype="warning"
                 )
+            if ((calc_threshold > self._THRESHOLD) and self.client.get("misp").decode("utf-8") == "False"):
+                self.client.set("misp", True)
+
+                alert_msg = {"Origin": "IDS",
+                             "IP": "Multiple IPs ,Port:{}".format(port),
+                             "Incident": "Possible Multiple IP Single Port DDoS attack."
+                             }
+
+                self.alerter.run(alert_msg)
+                self.logger.log(
+                    "Possible Multiple IP Single Port DDoS attack detected",
+                    logtype="warning"
+                )
+                self.log2sys.write_log("Possible Multiple IP Single Port DDoS attack")
 
     def detect_mimp(self):
         """
@@ -219,8 +275,22 @@ class DDoS(object):
             except ZeroDivisionError:
                 calc_threshold = len(self.simp)
 
-            if calc_threshold > self._THRESHOLD:
+            if ((calc_threshold > self._THRESHOLD) and self.client.get("mimp").decode("utf-8") == "True"):
+                self.logger.log(
+                    "Possible Multiple IP Single Port DDoS attack detected",
+                    logtype="warning"
+                )
+            if ((calc_threshold > self._THRESHOLD) and self.client.get("mimp").decode("utf-8") == "False"):
+                self.client.set("mimp", True)
+
+                alert_msg = {"Origin": "IDS",
+                             "IP": "Multiple IPs",
+                             "Incident": "Possible Multiple IP Multiple Port DDoS attack."
+                             }
+
+                self.alerter.run(alert_msg)
                 self.logger.log(
                     "Possible Multiple IP Multiple Port DDoS attack detected",
                     logtype="warning"
                 )
+                self.log2sys.write_log("Possible Multiple IP Multiple Port DDoS attack")

@@ -6,6 +6,7 @@ The slack Webhook Module that is responsible for alerting the user incase of an 
 
 from slack_sdk.webhook.async_client import AsyncWebhookClient
 from servguard import logger
+from servguard import log2sys
 import asyncio
 
 class Alert():
@@ -16,6 +17,7 @@ class Alert():
             __name__,
             debug=debug
         )
+        self.log2sys=log2sys.WafLogger(__name__,debug=debug)
 
         self.URL="https://hooks.slack.com/services/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"
 
@@ -41,11 +43,13 @@ class Alert():
                 logtype="info"
 
             )
+            self.log2sys.write_log("Slack Alert Sent Successfully")
         except AssertionError:
             self.logger.log(
                 "Unable to Send Slack Alert",
                 logtype="error"
             )
+            self.log2sys.write_log("Unable to Send Slack Alert")
     def run(self,msg:dict):
         asyncio.run(self.send_alert(msg))
 

@@ -5,6 +5,9 @@ import sys
 from io import StringIO
 import re
 from servguard import logger
+from servguard import  alerter
+from pymemcache.client import base
+from servguard import log2sys
 
 
 class ARPCache(object):
@@ -29,6 +32,14 @@ class ARPCache(object):
                 __name__,
                 debug=debug
         )
+        # Initilaize Logging to System
+        self.log2sys=log2sys.WafLogger(__name__,debug=debug)
+        # memcached for state store
+        self.client = base.Client(("localhost", 11211))
+        # sack for Alerting
+        self.alerter = alerter.Alert(debug=True)
+        # Initial Flags for Alerts
+        self.client.set("arp", False)
 
     @staticmethod
     def capture_output(to_perform):
@@ -96,7 +107,21 @@ class ARPCache(object):
                     ip = pkt[scapy.ARP].psrc
                     real_mac = str(self.get_mac(ip))
                     spoofed_mac = str(pkt[scapy.ARP].hwsrc)
-                    if (real_mac != spoofed_mac):
+                    if (real_mac != spoofed_mac and self.client.get("arp").decode("utf-8")=="True"):
+                        self.logger.log(
+                            "ARP Cache poisioning / MiTM attack detected.",
+                            logtype="warning"
+                        )
+                        self.log2sys.write_log("ARP Cache poisioning / MiTM attack detected.")
+                    if (real_mac != spoofed_mac and self.client.get("arp").decode("utf-8")=="False"):
+                        self.client.set("arp",True)
+
+                        alert_msg = {"Origin": "IDS",
+                                     "IP": ip,
+                                     "Incident": "ARP Cache poisioning / MiTM attack detected."
+                                     }
+
+                        self.alerter.run(alert_msg)
                         self.logger.log(
                             "ARP Cache poisioning / MiTM attack detected.",
                             logtype="warning"

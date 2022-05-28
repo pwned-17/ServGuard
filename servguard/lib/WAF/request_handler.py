@@ -2,6 +2,7 @@
 import asyncio
 
 from urllib import parse
+from servguard import log2sys
 from servguard import logger
 from servguard.lib.WAF import analyzer
 from servguard.lib.WAF import forwarder
@@ -9,6 +10,7 @@ from servguard.lib.WAF import header_analyzer
 from servguard import alerter
 from servguard.lib.WAF.utils import *
 from pymemcache.client import base
+
 
 
 
@@ -24,13 +26,16 @@ class HTTP(asyncio.Protocol):
         self.server_map=creds["server_map"]
         self.mode=creds["mode"]
         self.secure_headers=creds["secure_headers"]
-        self.threshold=10
+        self.threshold=creds["threshold"]
 
 
          #Initialize Logger
 
         self.logger=logger.ServGuardLogger(__name__,
                                            debug=self.debug)
+
+        self.logsys=log2sys.WafLogger(__name__,debug=self.debug)
+
         # Memcached Instance
 
         self.client = base.Client(("localhost", 11211))
@@ -38,6 +43,7 @@ class HTTP(asyncio.Protocol):
 
         #initialize alerter
         self.alerter=alerter.Alert(debug=self.debug)
+
 
 
 
@@ -90,6 +96,9 @@ class HTTP(asyncio.Protocol):
                             "{} Detected from {}:{}".format(self.value[0], self.rhost, self.rport),
                             logtype="warning"
                         )
+                        self.logsys.write_log(
+                            "{} Detected from {}:{}".format(self.value[0], self.rhost, self.rport)
+                        )
                         #Close Transport with a warning
 
                         self.transport.write(b"HTTP/1.0 403\r\n \r\n\r\n <!DOCTYPE HTML>\r\n<HTML>\r\n<BODY>\r\n<h1 align='center'>Requested Blocked By server </h1></BODY></HTML>")
@@ -120,6 +129,10 @@ class HTTP(asyncio.Protocol):
                     self.logger.log(
                         "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,parse.unquote(self.parsed_data.path)),
                         logtype="info"
+                    )
+                    self.logsys.write_log(
+                        "Valid Request from  from {}:{} on path {}".format(self.rhost, self.rport,parse.unquote(self.parsed_data.path))
+
                     )
                 except Exception as E:
                     self.logger.log(

@@ -3,6 +3,9 @@ from servguard.lib.IDS.r2l_rules.arp_spoof import ARPCache
 from servguard.lib.IDS.r2l_rules.ddos import DDoS
 
 from servguard.lib.IDS.r2l_rules.ping_of_death import PingOfDeath
+from servguard.lib.IDS.r2l_rules.macflood import MAC
+from servguard.lib.IDS.r2l_rules.land_dos import LandDOS
+from servguard.lib.IDS.r2l_rules.syn_flood import SynFlood
 
 
 
@@ -29,7 +32,9 @@ class R2LEngine(object):
         self.ping_of_death = PingOfDeath(debug=debug)
 
         self.ddos = DDoS(debug=debug)
-
+        self.macflood=MAC(debug=debug)
+        self.land=LandDOS(debug=debug)
+        self.syn_flood=SynFlood(debug=debug)
 
     def run(self, pkt):
         """
@@ -50,3 +55,6 @@ class R2LEngine(object):
 
         self.ping_of_death.detect(pkt)
         self.ddos.classify_ddos(pkt)
+        self.macflood.detect_cam(pkt)
+        self.land.detect_land_dos(pkt)
+        self.syn_flood.detect_syn_flood(pkt)

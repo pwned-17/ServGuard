@@ -6,6 +6,7 @@ from collections import defaultdict
 from servguard import logger
 from pymemcache.client import base
 from servguard import alerter
+from servguard import log2sys
 
 
 from servguard.lib.IDS import utils
@@ -16,16 +17,6 @@ class DetectRecon(object):
 
     def __init__(self, threshold=None, debug=False, eligibility_threshold=None, severity_factor=None):
         """Initialize DetectRecon class.
-
-        Args:
-            threshold (integer): Threshold ratio limit
-            debug (bool): Log on terminal or not
-
-        Raises:
-            None
-
-        Returns:
-            None
 
         Working:
             Detect the following possible probe (reconnaissance) attacks
@@ -45,6 +36,8 @@ class DetectRecon(object):
                 __name__,
                 debug
         )
+        # Intilaize System Logger
+        self.log2sys=log2sys.WafLogger(__name__,debug=debug)
 
         # Set threshold
         if not eligibility_threshold:
@@ -275,6 +268,7 @@ class DetectRecon(object):
                             "ICMP Scan detected from: " + str(key),
                             logtype="warning"
                     )
+                    self.log2sys.write_log("ICMP Scan detected from:{} ".format(str(key)))
 
     def detect_os_scan(self, packet):
         """
@@ -524,7 +518,6 @@ class DetectRecon(object):
                 )
             if ((calc_threshold >= self._THRESHOLD or
                     count >= self._COUNT) and alert_flag=="False"):
-                print("inside slack")
                 self.client.set(attack_type,True)
                 # Send slack Message
                 alert_msg={"Origin": "IDS",
@@ -540,6 +533,7 @@ class DetectRecon(object):
                     new_msg,
                     logtype="warning"
                 )
+                self.log2sys.write_log(new_msg)
 
 
     def run(self, packet):
