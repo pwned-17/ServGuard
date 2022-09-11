@@ -19,7 +19,7 @@ class Alert():
         )
         self.log2sys=log2sys.WafLogger(__name__,debug=debug)
 
-        self.URL="https://hooks.slack.com/services/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"
+        self.URL="Slack Url here "
 
     async  def send_alert(self,msg:dict):
 
